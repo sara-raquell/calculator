@@ -23,10 +23,51 @@ class _CalculatorPageState extends State<CalculatorPage> {
   void setOperationType(OperationTypeEnum newType){
     setState(() {
       operationType = newType;
-      displayNumber = newType.symbol;
+      displayNumber += newType.symbol;
     });
   }
 
+  void clear(){
+    setState(() {
+      displayNumber = '0';
+      operationType = null;
+    });
+  }
+
+  void appendNumber(String stringNumber){
+    setState(() {
+      if(displayNumber == '0'){
+        displayNumber = stringNumber;
+      }else{
+        displayNumber += stringNumber;
+      }
+    });
+  }
+
+  List<double> parseNumbers(String expression){
+    RegExp regExp = RegExp(r'[0-9]+\.?[0-9]*');
+    var matches = regExp.allMatches(expression);
+
+    List<double> numbers = [];
+    for(var match in matches){
+      String numberText = match.group(0)!;
+      numbers.add(double.parse(numberText));
+    }
+
+    return numbers;
+  }
+
+  List<OperationTypeEnum> getOperators(String expression){
+    final expression1 = expression.characters.where((x) => OperationTypeEnum.values.any((op) => op.symbol == x));
+
+    return expression1.map((x) => OperationTypeEnum.values.firstWhere((op) => op.symbol == x)).toList();
+  }
+
+  void calculate(){
+    String expression = displayNumber.replaceAll(',', '.');
+    List<double> numbers = parseNumbers(expression);
+    List<OperationTypeEnum> operations = [];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +93,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
             children: [
               Row(
               children: [
-                ButtonWidget(text: "C", onPressed: (){}, color: Colors.red,),
+                ButtonWidget(text: "C", onPressed: (){
+                  clear();
+                }, color: Colors.red,),
                 ButtonWidget(color: Colors.orange, text: "\u232B", onPressed: (){}),
                 ButtonWidget(text: "÷", onPressed: (){
                   setOperationType(OperationTypeEnum.division);
@@ -60,32 +103,54 @@ class _CalculatorPageState extends State<CalculatorPage> {
               ],
             ),
              Row(children: [
-                 ButtonWidget(text: "7", onPressed: (){}),
-                 ButtonWidget(text: "8", onPressed: (){}),
-                 ButtonWidget(text: "9", onPressed: (){}),
+                 ButtonWidget(text: "7", onPressed: (){
+                   appendNumber("7");
+                 }),
+                 ButtonWidget(text: "8", onPressed: (){
+                   appendNumber("8");
+                 }),
+                 ButtonWidget(text: "9", onPressed: (){
+                   appendNumber("9");
+                 }),
                  ButtonWidget(text: "x", onPressed: (){
                    setOperationType(OperationTypeEnum.multiplication);
                  }, color: Colors.blue, textColor: Colors.white),
              ],),
               Row(children: [
-                ButtonWidget(text: "4", onPressed: (){}),
-                ButtonWidget(text: "5", onPressed: (){}),
-                ButtonWidget(text: "6", onPressed: (){}),
+                ButtonWidget(text: "4", onPressed: (){
+                  appendNumber("4");
+                }),
+                ButtonWidget(text: "5", onPressed: (){
+                  appendNumber("5");
+                }),
+                ButtonWidget(text: "6", onPressed: (){
+                  appendNumber("6");
+                }),
                 ButtonWidget(text: "-", onPressed: (){
                   setOperationType(OperationTypeEnum.subtraction);
                 }, color: Colors.blue, textColor: Colors.white),
               ],),
               Row(children: [
-                ButtonWidget(text: "1", onPressed: (){}),
-                ButtonWidget(text: "2", onPressed: (){}),
-                ButtonWidget(text: "3", onPressed: (){}),
+                ButtonWidget(text: "1", onPressed: (){
+                  appendNumber("1");
+                }),
+                ButtonWidget(text: "2", onPressed: (){
+                  appendNumber("2");
+                }),
+                ButtonWidget(text: "3", onPressed: (){
+                  appendNumber("3");
+                }),
                 ButtonWidget(text: "+", onPressed: (){
                   setOperationType(OperationTypeEnum.addition);
                 }, color: Colors.blue, textColor: Colors.white),
               ],),
               Row(children: [
-                ButtonWidget(text: "0", onPressed: (){}),
-                ButtonWidget(text: ",", onPressed: (){}),
+                ButtonWidget(text: "0", onPressed: (){
+                  appendNumber("0");
+                }),
+                ButtonWidget(text: ",", onPressed: (){
+                  appendNumber(",");
+                }),
                 ButtonWidget(text: "=", onPressed: (){}, color: Colors.green,)
               ],)
             ],
