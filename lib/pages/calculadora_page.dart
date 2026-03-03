@@ -1,4 +1,5 @@
 import 'package:calculadora2/enums/operation.type.dart';
+import 'package:calculadora2/pages/historic_page.dart';
 import 'package:calculadora2/widgets2/button.widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -12,17 +13,17 @@ class CalculatorPage extends StatefulWidget {
 class _CalculatorPageState extends State<CalculatorPage> {
 
   late String displayNumber;
-  OperationTypeEnum? operationType;
+  late List<String> historic;
 
   @override
   void initState() {
     displayNumber = "0";
+    historic = [];
     super.initState();
   }
 
   void setOperationType(OperationTypeEnum newType){
     setState(() {
-      operationType = newType;
       displayNumber += newType.symbol;
     });
   }
@@ -30,7 +31,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
   void clear(){
     setState(() {
       displayNumber = '0';
-      operationType = null;
     });
   }
 
@@ -63,17 +63,75 @@ class _CalculatorPageState extends State<CalculatorPage> {
     return expression1.map((x) => OperationTypeEnum.values.firstWhere((op) => op.symbol == x)).toList();
   }
 
+  void resolvePriorityOperation(List<double> numbers, List<OperationTypeEnum> operators){
+    int i = 0;
+
+    while(i < operators.length) {
+      if (operators[i] == OperationTypeEnum.multiplication) {
+        numbers[i] = numbers[i] * numbers[i+1];
+        numbers.removeAt(i+1);
+        operators.removeAt(i);
+      }else if(operators[i] == OperationTypeEnum.division){
+        numbers[i] = numbers[i] / numbers[i+1];
+        numbers.removeAt(i+1);
+        operators.removeAt(i);
+      }
+      i++;
+    }
+
+  }
+
+  double resolveAddittionAndSubtraction(List<double> numbers, List<OperationTypeEnum> operators){
+    int i = 0;
+
+    while(i < operators.length){
+      if(operators[i] == OperationTypeEnum.addition){
+        numbers[0] = numbers[0] + numbers[i+1];
+        // numbers.removeAt(i+1);
+      }else {
+        numbers[0] = numbers[0] - numbers[i+1];
+        // numbers.removeAt(i+1);
+      }
+      i++;
+    }
+
+    return numbers[0];
+  }
+
+
+
   void calculate(){
     String expression = displayNumber.replaceAll(',', '.');
     List<double> numbers = parseNumbers(expression);
-    List<OperationTypeEnum> operations = [];
+    List<OperationTypeEnum> operations = getOperators(expression);
+
+    resolvePriorityOperation(numbers, operations);
+    final result = resolveAddittionAndSubtraction(numbers, operations);
+
+    setState(() {
+      displayNumber = result.toString().replaceAll('.', ',');
+      historic.add("$expression = $result");
+    });
+
   }
 
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Calculadora"), ),
+      appBar: AppBar(
+        title: const Text("Calculadora"),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HistoricPage(historic: historic))
+                );
+          }, icon: Icon(Icons.history))
+        ],
+      ),
       body: Column(
         children: [
           Container(
@@ -151,7 +209,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 ButtonWidget(text: ",", onPressed: (){
                   appendNumber(",");
                 }),
-                ButtonWidget(text: "=", onPressed: (){}, color: Colors.green,)
+                ButtonWidget(text: "=", onPressed: (){
+                  calculate();
+                }, color: Colors.green,)
               ],)
             ],
           )
